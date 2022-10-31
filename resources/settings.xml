@@ -82,6 +82,23 @@
 					<control type="toggle"/>
 				</setting>
 			</group>
+			<group id="4" label="32995">
+				<setting id="notify_at_start" type="boolean" label="32402" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="ignore_chapters" type="boolean" label="32403" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="notify_no_stingers" type="boolean" label="32404" help="">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
 		</category>
 	</section>
 </settings>

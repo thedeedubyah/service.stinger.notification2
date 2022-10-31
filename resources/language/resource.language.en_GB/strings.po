@@ -26,6 +26,14 @@ msgctxt "#32004"
 msgid "After credits"
 msgstr ""
 
+msgctxt "#32005"
+msgid "You can skip the credits."
+msgstr ""
+
+msgctxt "#32006"
+msgid "No registered stingers"
+msgstr ""
+
 # Actions
 
 msgctxt "#32400"
@@ -36,6 +44,19 @@ msgctxt "#32401"
 msgid "The tags 'duringcreditsstinger' and 'aftercreditsstinger' have been added to all relevant movies. Thanks, TheMovieDB! Use the Universal Movie Scraper as your movie scraper to tag new movies as they are added."
 msgstr ""
 
+msgctxt "#32402"
+msgid "Additional notification when playback starts"
+msgstr ""
+
+msgctxt "#32403"
+msgid "Ignore chapters, always use 'x mins before end' method"
+msgstr ""
+
+msgctxt "#32404"
+msgid "Show 'no stingers' notification"
+msgstr ""
+
+
 # Settings headings
 
 msgctxt "#32999"
@@ -45,6 +66,10 @@ msgstr ""
 
 msgctxt "#32998"
 msgid "Actions"
+msgstr ""
+
+msgctxt "#32995"
+msgid "Behaviour Changes"
 msgstr ""
 
 # Settings

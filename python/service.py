@@ -9,12 +9,14 @@ from libs.notificationwindow import NotificationWindow
 DURING_CREDITS_STINGER_MESSAGE = 32000
 AFTER_CREDITS_STINGER_MESSAGE = 32001
 BOTH_STINGERS_MESSAGE = 32002
+NO_STINGERS_MESSAGE = 32005
 DURING_CREDITS_STINGER_TYPE = 32003
 AFTER_CREDITS_STINGER_TYPE = 32004
+NO_STINGERS_TYPE = 32006
 DURING_CREDITS_STINGER_TAG = 'duringcreditsstinger'
 AFTER_CREDITS_STINGER_TAG = 'aftercreditsstinger'
 BOTH_STINGERS_PROPERTY = DURING_CREDITS_STINGER_TAG + ' ' + AFTER_CREDITS_STINGER_TAG
-
+NO_STINGERS_PROPERTY = "nolistedstingers"
 addon = xbmcaddon.Addon()
 
 def log(message, level=xbmc.LOGDEBUG):
@@ -48,6 +50,9 @@ class StingerService(xbmc.Monitor):
             self.notification_visibletime = addon.getSettingInt('notification_visibletime')
         except ValueError:
             self.notification_visibletime = 8
+        self.notify_at_start = addon.getSettingBool('notify_at_start')
+        self.ignore_chapters = addon.getSettingBool('ignore_chapters')
+        self.notify_no_stingers = addon.getSettingBool('notify_no_stingers')
 
     @property
     def stingertype(self):
@@ -83,10 +88,14 @@ class StingerService(xbmc.Monitor):
         if not self.currentid:
             self.currentid = data['item']['id']
             self.checkstingerinfo()
+            if self.notify_at_start:
+                self.notify()
+                self.notified = False  # We don't want to suppress normal stinger notification
 
     def checkstingerinfo(self):
         movie = quickjson.get_movie_details(self.currentid)
         if not movie or 'tag' not in movie or not movie['tag']:
+            # No tags at all on this movie
             self.stingertype = None
         else:
             duringcredits = DURING_CREDITS_STINGER_TAG in movie['tag'] or self.duringcredits_tag and self.duringcredits_tag in movie['tag']
@@ -98,8 +107,9 @@ class StingerService(xbmc.Monitor):
             elif aftercredits:
                 self.stingertype = AFTER_CREDITS_STINGER_TAG
             else:
-                self.stingertype = None
-
+                # We have tags on the movie, but not stinger tags
+                self.stingertype = NO_STINGERS_PROPERTY
+                
         if not self.stingertype:
             self.currentid = None
             return
@@ -110,10 +120,14 @@ class StingerService(xbmc.Monitor):
                 self.currentid = None
                 return
             title = xbmc.getInfoLabel('Player.Title')
-        try:
-            self.totalchapters = int(xbmc.getInfoLabel('Player.ChapterCount'))
-        except ValueError:
-            self.totalchapters = None
+
+        self.totalchapters = None
+        if not self.ignore_chapters:
+            try:
+                self.totalchapters = int(xbmc.getInfoLabel('Player.ChapterCount'))
+            except ValueError:
+                pass
+        
         if not player.isPlayingVideo():
             self.currentid = None
             return
@@ -148,6 +162,7 @@ class StingerService(xbmc.Monitor):
             return
         self.notified = True
         message = None
+
         if self.stingertype == DURING_CREDITS_STINGER_TAG:
             message = addon.getLocalizedString(DURING_CREDITS_STINGER_MESSAGE)
             stingertype = addon.getLocalizedString(DURING_CREDITS_STINGER_TYPE)
@@ -157,14 +172,19 @@ class StingerService(xbmc.Monitor):
         elif self.stingertype == BOTH_STINGERS_PROPERTY:
             message = addon.getLocalizedString(BOTH_STINGERS_MESSAGE)
             stingertype = '{0}, [LOWERCASE]{1}[/LOWERCASE]'.format(addon.getLocalizedString(DURING_CREDITS_STINGER_TYPE), addon.getLocalizedString(AFTER_CREDITS_STINGER_TYPE))
-
+        elif self.notify_no_stingers and self.stingertype == NO_STINGERS_PROPERTY:
+            message = addon.getLocalizedString(NO_STINGERS_MESSAGE)
+            stingertype = addon.getLocalizedString(NO_STINGERS_TYPE)
+        
         if not message:
             return
-
+        
         if self.use_simplenotification:
+            log('simple notification')
             icon = "special://home/addons/service.stinger.notification/resources/media/logo.png"
             xbmcgui.Dialog().notification(stingertype, message, icon, self.notification_visibletime * 1000)
         else:
+            log('non-simple notification')
             window = NotificationWindow('script-stinger-notification-Notification.xml', addon.getAddonInfo('path'), 'Default', '1080i')
             window.message = message
             window.stingertype = stingertype
